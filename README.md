@@ -104,6 +104,10 @@ Use `--json-errors` to get a machine-readable JSON error envelope on stderr inst
           -d @-
 ```
 
+## Releasing
+
+`git tag v0.2.0 && git push origin v0.2.0` — that's it. See [docs/releasing.md](docs/releasing.md) for the full process, pre-release checklist, and release artifacts.
+
 ## License
 
 Apache-2.0. See [LICENSE](LICENSE).
