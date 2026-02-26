@@ -1,5 +1,9 @@
 name: Test
-on: [push, pull_request]
+on:
+  push:
+    branches: [main]
+  pull_request:
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -10,3 +14,9 @@ jobs:
           go-version: '1.23'
       - run: go test -race -cover ./...
       - run: go vet ./...
+      - run: |
+          test -z "$(gofmt -l .)" || {
+            echo "::error::gofmt found unformatted files:"
+            gofmt -l .
+            exit 1
+          }
