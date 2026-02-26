@@ -1,0 +1,64 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.10.0",
+  "variables": {},
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "hcloud_server.web",
+          "mode": "managed",
+          "type": "hcloud_server",
+          "name": "web",
+          "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+          "schema_version": 0,
+          "values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "hcloud_server.web",
+      "mode": "managed",
+      "type": "hcloud_server",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {},
+        "after_unknown": {}
+      }
+    },
+    {
+      "address": "data.hcloud_image.ubuntu",
+      "mode": "data",
+      "type": "hcloud_image",
+      "name": "ubuntu",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["read"],
+        "before": null,
+        "after": {},
+        "after_unknown": {}
+      }
+    },
+    {
+      "address": "data.hcloud_ssh_key.default",
+      "mode": "data",
+      "type": "hcloud_ssh_key",
+      "name": "default",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["read"],
+        "before": null,
+        "after": {},
+        "after_unknown": {}
+      }
+    }
+  ],
+  "configuration": {
+    "root_module": {}
+  }
+}

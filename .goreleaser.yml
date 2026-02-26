@@ -1,0 +1,24 @@
+builds:
+  - id: evidra-adapter-terraform
+    main: ./cmd/evidra-adapter-terraform
+    binary: evidra-adapter-terraform
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X github.com/evidra/adapters/terraform.Version={{.Version}}
+
+archives:
+  - id: terraform
+    builds: [evidra-adapter-terraform]
+    name_template: "evidra-adapter-terraform_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+release:
+  github:
+    owner: evidra
+    name: adapters

@@ -1,0 +1,53 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.10.0",
+  "variables": {},
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "hcloud_firewall.evidra",
+          "mode": "managed",
+          "type": "hcloud_firewall",
+          "name": "evidra",
+          "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+          "schema_version": 0,
+          "values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "hcloud_firewall.evidra",
+      "mode": "managed",
+      "type": "hcloud_firewall",
+      "name": "evidra",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {},
+        "after_unknown": {}
+      }
+    }
+  ],
+  "resource_drift": [
+    {
+      "address": "hcloud_server.drifted",
+      "mode": "managed",
+      "type": "hcloud_server",
+      "name": "drifted",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["update"],
+        "before": {"name": "drifted", "labels": {}},
+        "after": {"name": "drifted", "labels": {"manual": "true"}},
+        "after_unknown": {}
+      }
+    }
+  ],
+  "configuration": {
+    "root_module": {}
+  }
+}

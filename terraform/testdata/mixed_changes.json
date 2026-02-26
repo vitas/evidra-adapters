@@ -1,0 +1,77 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.10.0",
+  "variables": {},
+  "planned_values": {
+    "root_module": {
+      "resources": [
+        {
+          "address": "hcloud_firewall.evidra",
+          "mode": "managed",
+          "type": "hcloud_firewall",
+          "name": "evidra",
+          "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+          "schema_version": 0,
+          "values": {}
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "hcloud_firewall.evidra",
+      "mode": "managed",
+      "type": "hcloud_firewall",
+      "name": "evidra",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {},
+        "after_unknown": {}
+      }
+    },
+    {
+      "address": "hcloud_server.web",
+      "mode": "managed",
+      "type": "hcloud_server",
+      "name": "web",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["update"],
+        "before": {"name": "web", "server_type": "cx11"},
+        "after": {"name": "web", "server_type": "cx21"},
+        "after_unknown": {}
+      }
+    },
+    {
+      "address": "hcloud_volume.data",
+      "mode": "managed",
+      "type": "hcloud_volume",
+      "name": "data",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["delete"],
+        "before": {"id": "456", "name": "data"},
+        "after": null,
+        "after_unknown": {}
+      }
+    },
+    {
+      "address": "hcloud_server.db",
+      "mode": "managed",
+      "type": "hcloud_server",
+      "name": "db",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["delete", "create"],
+        "before": {"name": "db", "image": "ubuntu-20.04"},
+        "after": {"name": "db", "image": "ubuntu-22.04"},
+        "after_unknown": {}
+      }
+    }
+  ],
+  "configuration": {
+    "root_module": {}
+  }
+}

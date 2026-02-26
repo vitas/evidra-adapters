@@ -1,0 +1,71 @@
+{
+  "format_version": "1.2",
+  "terraform_version": "1.10.0",
+  "variables": {},
+  "planned_values": {
+    "root_module": {
+      "child_modules": [
+        {
+          "address": "module.network",
+          "resources": [
+            {
+              "address": "module.network.hcloud_network.main",
+              "mode": "managed",
+              "type": "hcloud_network",
+              "name": "main",
+              "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+              "schema_version": 0,
+              "values": {}
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "resource_changes": [
+    {
+      "address": "hcloud_server.app",
+      "mode": "managed",
+      "type": "hcloud_server",
+      "name": "app",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {},
+        "after_unknown": {}
+      }
+    },
+    {
+      "address": "module.network.hcloud_network.main",
+      "module_address": "module.network",
+      "mode": "managed",
+      "type": "hcloud_network",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {},
+        "after_unknown": {}
+      }
+    },
+    {
+      "address": "module.network.hcloud_subnet.main",
+      "module_address": "module.network",
+      "mode": "managed",
+      "type": "hcloud_subnet",
+      "name": "main",
+      "provider_name": "registry.terraform.io/hetznercloud/hcloud",
+      "change": {
+        "actions": ["create"],
+        "before": null,
+        "after": {},
+        "after_unknown": {}
+      }
+    }
+  ],
+  "configuration": {
+    "root_module": {}
+  }
+}

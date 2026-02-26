@@ -1,0 +1,14 @@
+bin/
+dist/
+*.test
+*.out
+coverage.out
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# AI
+CLAUDE.md
+.claude/
