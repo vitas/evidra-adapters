@@ -927,7 +927,7 @@ EVIDRA_FILTER_RESOURCE_TYPES="hcloud_server,hcloud_volume" \
 ADAPTER_OUTPUT=$(terraform show -json tfplan.bin | evidra-adapter-terraform)
 INPUT=$(echo "$ADAPTER_OUTPUT" | jq -r '.input')
 
-curl -s -X POST https://evidra.rest/v1/validate \
+curl -s -X POST https://api.evidra.rest/v1/validate \
   -H "Authorization: Bearer $EVIDRA_API_KEY" \
   -H "Content-Type: application/json" \
   -d "{
@@ -1364,7 +1364,7 @@ Once the adapter binary exists, the GitHub Action is trivial:
     terraform show -json tfplan.bin \
       | evidra-adapter-terraform \
       | jq -r '.input' \
-      | xargs -I {} curl -sf -X POST https://evidra.rest/v1/validate \
+      | xargs -I {} curl -sf -X POST https://api.evidra.rest/v1/validate \
           -H "Authorization: Bearer ${{ secrets.EVIDRA_API_KEY }}" \
           -H "Content-Type: application/json" \
           -d '{"tool":"terraform","operation":"apply","params":{"payload":{}},"actor":{"type":"pipeline","id":"${{ github.run_id }}"}}'
@@ -1801,7 +1801,7 @@ func buildTestBinary(t *testing.T) string {
 This step depends on the Evidra API being deployed with skills support.
 
 ```bash
-curl -X POST https://evidra.rest/v1/skills \
+curl -X POST https://api.evidra.rest/v1/skills \
   -H "Authorization: Bearer $EVIDRA_API_KEY" \
   -H "Content-Type: application/json" \
   -d @- << 'EOF'
@@ -1846,7 +1846,7 @@ jobs:
         run: |
           evidra-adapter-terraform --json-errors < terraform/tfplan.json \
             | jq -r '.input' \
-            | curl -sf -X POST https://evidra.rest/v1/validate \
+            | curl -sf -X POST https://api.evidra.rest/v1/validate \
                 -H "Authorization: Bearer ${{ secrets.EVIDRA_API_KEY }}" \
                 -H "Content-Type: application/json" \
                 -d @-

@@ -31,7 +31,7 @@ terraform show -json tfplan.bin | evidra-adapter-terraform | jq .
 # With Evidra API — full validation workflow
 terraform show -json tfplan.bin | evidra-adapter-terraform \
   | jq -r '.input' \
-  | curl -sf -X POST https://evidra.rest/v1/validate \
+  | curl -sf -X POST https://api.evidra.rest/v1/validate \
       -H "Authorization: Bearer $EVIDRA_API_KEY" \
       -H "Content-Type: application/json" \
       -d @-
@@ -98,7 +98,7 @@ Use `--json-errors` to get a machine-readable JSON error envelope on stderr inst
     terraform show -json tfplan.bin \
       | evidra-adapter-terraform --json-errors \
       | jq -r '.input' \
-      | curl -sf -X POST https://evidra.rest/v1/validate \
+      | curl -sf -X POST https://api.evidra.rest/v1/validate \
           -H "Authorization: Bearer ${{ secrets.EVIDRA_API_KEY }}" \
           -H "Content-Type: application/json" \
           -d @-
