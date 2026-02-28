@@ -1,4 +1,4 @@
-module github.com/evidra/adapters
+module github.com/vitas/evidra-adapters
 
 go 1.23
 

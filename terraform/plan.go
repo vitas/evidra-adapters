@@ -13,7 +13,7 @@ import (
 
 	tfjson "github.com/hashicorp/terraform-json"
 
-	"github.com/evidra/adapters/adapter"
+	"github.com/vitas/evidra-adapters/adapter"
 )
 
 // Version is the adapter version, set at build time via ldflags.
@@ -218,6 +218,7 @@ func (a *PlanAdapter) Convert(
 			"resource_count":        len(plan.ResourceChanges),
 			"timestamp":             Now().UTC().Format(time.RFC3339),
 			"artifact_sha256":       sha256Hex(raw),
+			"warnings":              []string{},
 		},
 	}, nil
 }

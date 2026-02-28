@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/evidra/adapters/adapter"
+	"github.com/vitas/evidra-adapters/adapter"
 )
 
 func buildTestBinary(t *testing.T) string {
@@ -53,12 +53,13 @@ func TestCLI_StdinStdout(t *testing.T) {
 		t.Fatalf("stdout is not valid JSON: %s", stdout.String())
 	}
 
-	var result adapter.Result
-	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
-		t.Fatalf("unmarshal result: %v", err)
+	// Default output is input-only (no wrapper).
+	var input map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &input); err != nil {
+		t.Fatalf("unmarshal input: %v", err)
 	}
 
-	createCount, ok := result.Input["create_count"]
+	createCount, ok := input["create_count"]
 	if !ok {
 		t.Fatal("missing create_count in output")
 	}
@@ -67,9 +68,51 @@ func TestCLI_StdinStdout(t *testing.T) {
 		t.Errorf("expected create_count=2, got %v", createCount)
 	}
 
+	// Must NOT have metadata wrapper at top level.
+	if _, hasMetadata := input["metadata"]; hasMetadata {
+		t.Error("default output should not include metadata wrapper")
+	}
+
 	// stderr must be empty on success
 	if stderr.Len() != 0 {
 		t.Errorf("unexpected stderr output: %s", stderr.String())
+	}
+}
+
+func TestCLI_FormatFull(t *testing.T) {
+	binary := buildTestBinary(t)
+	fixture := loadFixture(t, "simple_create.json")
+
+	cmd := exec.Command(binary, "--format", "full")
+	cmd.Stdin = bytes.NewReader(fixture)
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		t.Fatalf("command failed: %v\nstderr: %s", err, stderr.String())
+	}
+
+	var result adapter.Result
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
+		t.Fatalf("unmarshal result: %v", err)
+	}
+
+	createCount, ok := result.Input["create_count"]
+	if !ok {
+		t.Fatal("missing create_count in full output")
+	}
+	if int(createCount.(float64)) != 2 {
+		t.Errorf("expected create_count=2, got %v", createCount)
+	}
+
+	// Full format must include metadata.
+	if result.Metadata == nil {
+		t.Fatal("expected metadata in full output")
+	}
+	if result.Metadata["adapter_name"] != "terraform-plan" {
+		t.Errorf("expected adapter_name='terraform-plan', got %v", result.Metadata["adapter_name"])
 	}
 }
 
@@ -163,17 +206,18 @@ func TestCLI_EnvConfig(t *testing.T) {
 		t.Fatalf("command failed: %v", err)
 	}
 
-	var result adapter.Result
-	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil {
-		t.Fatalf("unmarshal result: %v", err)
+	// Default output is input-only.
+	var input map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &input); err != nil {
+		t.Fatalf("unmarshal input: %v", err)
 	}
 
-	changes := result.Input["resource_changes"].([]any)
+	changes := input["resource_changes"].([]any)
 	if len(changes) > 2 {
 		t.Errorf("expected <=2 resource_changes, got %d", len(changes))
 	}
 
-	truncated := result.Input["resource_changes_truncated"].(bool)
+	truncated := input["resource_changes_truncated"].(bool)
 	if !truncated {
 		t.Error("expected resource_changes_truncated=true")
 	}

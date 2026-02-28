@@ -1,49 +1,54 @@
 # evidra-adapter-terraform
 
-Transforms `terraform show -json` output into structured parameters for Evidra policy evaluation.
+Terraform Plan Metadata Adapter (v1) for Evidra.
 
-The adapter reads a Terraform plan JSON on stdin and outputs a structured `{"input": {...}, "metadata": {...}}` object on stdout. The `input` fields map directly to an Evidra skill's `input_schema` and can be POSTed to `/v1/validate` for policy evaluation — without sending raw plan data to Evidra.
+Reads `terraform show -json` on stdin, extracts structured plan metadata, and outputs JSON on stdout for Evidra policy evaluation — without sending raw plan data to Evidra.
 
 ## Install
 
 **Binary (Linux/macOS):**
 ```bash
-curl -fsSL https://github.com/evidra/adapters/releases/download/v0.1.0/evidra-adapter-terraform_v0.1.0_linux_amd64.tar.gz \
+curl -fsSL https://github.com/vitas/evidra-adapters/releases/download/v0.1.0/evidra-adapter-terraform_v0.1.0_linux_amd64.tar.gz \
   | tar xz -C /usr/local/bin
 ```
 
 **Docker:**
 ```bash
-docker pull ghcr.io/evidra/adapter-terraform:v0.1.0
+docker pull ghcr.io/vitas/evidra-adapter-terraform:v0.1.0
 ```
 
 **Go:**
 ```bash
-go install github.com/evidra/adapters/cmd/evidra-adapter-terraform@v0.1.0
+go install github.com/vitas/evidra-adapters/cmd/evidra-adapter-terraform@v0.1.0
 ```
 
 ## Usage
 
 ```bash
-# Basic — inspect the output
-terraform show -json tfplan.bin | evidra-adapter-terraform | jq .
-
-# With Evidra API — full validation workflow
-terraform show -json tfplan.bin | evidra-adapter-terraform \
-  | jq -r '.input' \
+# Basic — pipe to Evidra
+terraform show -json tfplan.bin \
+  | evidra-adapter-terraform \
   | curl -sf -X POST https://api.evidra.rest/v1/validate \
       -H "Authorization: Bearer $EVIDRA_API_KEY" \
       -H "Content-Type: application/json" \
       -d @-
 
+# Inspect adapter output
+terraform show -json tfplan.bin | evidra-adapter-terraform | jq .
+
+# Full output (input + metadata) for debugging
+terraform show -json tfplan.bin | evidra-adapter-terraform --format full | jq .
+
 # Docker
 terraform show -json tfplan.bin \
-  | docker run -i ghcr.io/evidra/adapter-terraform:v0.1.0 \
-  | jq .input.destroy_count
+  | docker run -i ghcr.io/vitas/evidra-adapter-terraform:v0.1.0 \
+  | jq .destroy_count
 
 # With structured errors for CI
 terraform show -json tfplan.bin | evidra-adapter-terraform --json-errors
 ```
+
+By default, the adapter outputs only the `input` object (the payload Evidra expects). Use `--format full` to include the `metadata` wrapper for debugging.
 
 ## Configuration
 
@@ -75,6 +80,57 @@ The output has three tiers:
 
 Full schema: see [adapter system design doc](docs/evidra_adapter_system_design.md).
 
+## Output Contract (v1)
+
+| field | type | always present | used by |
+|---|---|---|---|
+| `resource_types` | `string[]` | yes (may be empty) | kill-switch `terraform_has_detail` |
+| `destroy_count` | `int` | yes | mass delete guard, `terraform.destroy` gate |
+| `create_count` | `int` | yes | informational |
+| `update_count` | `int` | yes | informational |
+| `replace_count` | `int` | yes | informational |
+| `total_changes` | `int` | yes | `= create + update + destroy + replace` |
+| `has_destroys` | `bool` | yes | risk shortcut |
+| `is_destroy_plan` | `bool` | yes | destroys only, no creates/updates |
+| `resource_changes_truncated` | `bool` | yes | truncation guard |
+| `delete_addresses_truncated` | `bool` | yes | truncation guard |
+| `replace_addresses_truncated` | `bool` | yes | truncation guard |
+| `delete_addresses` | `string[]` | yes (may be empty) | risk shortcut |
+| `replace_addresses` | `string[]` | yes (may be empty) | risk shortcut |
+| `drift_count` | `int` | yes | informational (not scope-filtered) |
+| `deferred_count` | `int` | yes | informational (not scope-filtered) |
+
+Fields NOT present in v1 (planned for v2):
+`security_group_rules`, `iam_policy_statements`, `trust_policy_statements`,
+`s3_public_access_block`, `server_side_encryption`.
+
+## Coverage
+
+**v1 (current) — plan metadata only.**
+
+Extracts: counts, resource types, addresses, providers, drift,
+deferred changes, truncation flags. Sufficient for kill-switch rules
+(fail-closed, unknown tools, mass delete, truncation guard).
+
+Does NOT extract resource-specific configuration:
+- Security group rules (ingress/egress CIDR, ports)
+- IAM policy statements (Action, Resource, Principal)
+- S3 public access block / encryption settings
+
+Ops-layer rules that inspect these fields (`deny_sg_open_world`,
+`deny_terraform_iam_wildcard`, `deny_s3_public_access`) will not fire
+in CI-only mode with v1 adapter.
+
+**v2 (planned) — deep extraction.**
+
+Will extract security group rules, IAM statements, and S3 config
+from `resource_changes[].change.after` for supported AWS resource types.
+
+**Important:** In ops profile, `terraform.apply` with metadata-only
+payload is denied by design (`ops.terraform_metadata_only`). This
+prevents false sense of coverage. Switch to baseline profile for
+kill-switch-only CI, or use MCP mode / adapter v2 for full ops coverage.
+
 ## Exit codes
 
 | Code | Meaning |
@@ -90,14 +146,13 @@ Use `--json-errors` to get a machine-readable JSON error envelope on stderr inst
 ```yaml
 - name: Install Evidra adapter
   run: |
-    curl -fsSL https://github.com/evidra/adapters/releases/download/v0.1.0/evidra-adapter-terraform_v0.1.0_linux_amd64.tar.gz \
+    curl -fsSL https://github.com/vitas/evidra-adapters/releases/download/v0.1.0/evidra-adapter-terraform_v0.1.0_linux_amd64.tar.gz \
       | tar xz -C /usr/local/bin
 
 - name: Evidra policy check
   run: |
     terraform show -json tfplan.bin \
       | evidra-adapter-terraform --json-errors \
-      | jq -r '.input' \
       | curl -sf -X POST https://api.evidra.rest/v1/validate \
           -H "Authorization: Bearer ${{ secrets.EVIDRA_API_KEY }}" \
           -H "Content-Type: application/json" \
@@ -106,7 +161,7 @@ Use `--json-errors` to get a machine-readable JSON error envelope on stderr inst
 
 ## Releasing
 
-`git tag v0.2.0 && git push origin v0.2.0` — that's it. See [docs/releasing.md](docs/releasing.md) for the full process, pre-release checklist, and release artifacts.
+`git tag v0.1.0 && git push origin v0.1.0` — that's it. See [docs/releasing.md](docs/releasing.md) for the full process, pre-release checklist, and release artifacts.
 
 ## License
 

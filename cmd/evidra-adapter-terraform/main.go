@@ -8,24 +8,37 @@ import (
 	"os"
 	"strings"
 
-	"github.com/evidra/adapters/terraform"
+	"github.com/vitas/evidra-adapters/terraform"
 )
 
 func main() {
 	jsonErrors := false
-	for _, arg := range os.Args[1:] {
-		switch arg {
+	formatMode := "input"
+	args := os.Args[1:]
+	for i := 0; i < len(args); i++ {
+		switch args[i] {
 		case "--version":
 			fmt.Printf("evidra-adapter-terraform %s\n", terraform.Version)
 			os.Exit(0)
 		case "--json-errors":
 			jsonErrors = true
+		case "--format":
+			if i+1 < len(args) {
+				i++
+				formatMode = args[i]
+			} else {
+				exitError(jsonErrors, "USAGE_ERROR", "--format requires a value (input or full)", "", 2)
+			}
 		case "--help", "-h":
-			fmt.Fprintf(os.Stderr, "Usage: terraform show -json tfplan.bin | evidra-adapter-terraform [--json-errors]\n")
+			fmt.Fprintf(os.Stderr, "Usage: terraform show -json tfplan.bin | evidra-adapter-terraform [--format input|full] [--json-errors]\n")
 			os.Exit(0)
 		default:
-			exitError(jsonErrors, "USAGE_ERROR", fmt.Sprintf("unknown flag: %s", arg), "", 2)
+			exitError(jsonErrors, "USAGE_ERROR", fmt.Sprintf("unknown flag: %s", args[i]), "", 2)
 		}
+	}
+	if formatMode != "input" && formatMode != "full" {
+		exitError(jsonErrors, "USAGE_ERROR",
+			fmt.Sprintf("unknown format %q: must be 'input' or 'full'", formatMode), "", 2)
 	}
 
 	raw, err := io.ReadAll(os.Stdin)
@@ -66,7 +79,13 @@ func main() {
 
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
-	if err := enc.Encode(result); err != nil {
+	var output any
+	if formatMode == "full" {
+		output = result
+	} else {
+		output = result.Input
+	}
+	if err := enc.Encode(output); err != nil {
 		exitError(jsonErrors, "PARSE_ERROR", fmt.Sprintf("encode result: %v", err), "", 1)
 	}
 }

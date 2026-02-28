@@ -3,7 +3,7 @@
 **Date:** 2026-02-26
 **Status:** Ready for implementation
 **First implementation:** Terraform Plan adapter (`hashicorp/terraform-json`)
-**Module:** `github.com/evidra/adapters` (separate Go module, NOT part of Evidra server)
+**Module:** `github.com/vitas/evidra-adapters` (separate Go module, NOT part of Evidra server)
 
 ---
 
@@ -327,7 +327,7 @@ import (
     "time"
 
     tfjson "github.com/hashicorp/terraform-json"
-    "github.com/evidra/adapters/adapter"
+    "github.com/vitas/evidra-adapters/adapter"
 )
 
 // Version is the adapter version, set at build time via ldflags.
@@ -810,7 +810,7 @@ import (
     "os"
     "strings"
 
-    "github.com/evidra/adapters/terraform"
+    "github.com/vitas/evidra-adapters/terraform"
 )
 
 func main() {
@@ -944,8 +944,8 @@ curl -s -X POST https://api.evidra.rest/v1/validate \
 ## 7. Module Structure
 
 ```
-github.com/evidra/adapters/
-├── go.mod                              # module github.com/evidra/adapters
+github.com/vitas/evidra-adapters/
+├── go.mod                              # module github.com/vitas/evidra-adapters
 ├── go.sum
 ├── README.md
 ├── LICENSE                             # Apache-2.0
@@ -981,7 +981,7 @@ github.com/evidra/adapters/
 ### go.mod
 
 ```
-module github.com/evidra/adapters
+module github.com/vitas/evidra-adapters
 
 go 1.23
 
@@ -1318,7 +1318,7 @@ builds:
     goarch: [amd64, arm64]
     ldflags:
       - -s -w
-      - -X github.com/evidra/adapters/terraform.Version={{.Version}}
+      - -X github.com/vitas/evidra-adapters/terraform.Version={{.Version}}
 
 archives:
   - id: terraform
@@ -1429,7 +1429,7 @@ For tools without a dedicated adapter, `generic-json` provides a zero-code solut
 
 | Step | What | Effort |
 |---|---|---|
-| 1 | Create `github.com/evidra/adapters` repo with `go.mod`, `adapter/adapter.go` | 30 min |
+| 1 | Create `github.com/vitas/evidra-adapters` repo with `go.mod`, `adapter/adapter.go` | 30 min |
 | 2 | Implement `terraform/plan.go` with `PlanAdapter` | 2 hours |
 | 3 | Generate test fixtures from `evidra-infra/terraform` (dogfood) | 30 min |
 | 4 | Write `terraform/plan_test.go` with all fixture scenarios | 2 hours |
@@ -1459,7 +1459,7 @@ Step-by-step instructions for Claude Code to implement the adapter module. Each 
 ```
 - Go 1.23+
 - This document loaded as context
-- Access to create github.com/evidra/adapters repo (or work locally)
+- Access to create github.com/vitas/evidra-adapters repo (or work locally)
 ```
 
 ### Step 1: Scaffold the module
@@ -1474,7 +1474,7 @@ Files to create:
 
 1. **`go.mod`**
    ```
-   module github.com/evidra/adapters
+   module github.com/vitas/evidra-adapters
    go 1.23
    require github.com/hashicorp/terraform-json v0.27.2
    ```
@@ -1839,7 +1839,7 @@ jobs:
 
       - name: Install Evidra Adapter
         run: |
-          curl -sL https://github.com/evidra/adapters/releases/latest/download/evidra-adapter-terraform_linux_amd64.tar.gz \
+          curl -sL https://github.com/vitas/evidra-adapters/releases/latest/download/evidra-adapter-terraform_linux_amd64.tar.gz \
             | tar xz -C /usr/local/bin
 
       - name: Evidra Policy Check

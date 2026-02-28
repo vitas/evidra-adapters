@@ -23,8 +23,10 @@ clean:
 
 # Smoke test: build binary and run against fixtures
 smoke: build
-	@echo '--- simple_create fixture ---'
+	@echo '--- simple_create fixture (default: input-only) ---'
 	./$(BINARY) < terraform/testdata/simple_create.json | jq .
+	@echo '--- simple_create fixture (--format full) ---'
+	./$(BINARY) --format full < terraform/testdata/simple_create.json | jq .input.create_count
 	@echo '--- empty stdin (expect exit 2) ---'
 	printf '' | ./$(BINARY) --json-errors 2>&1; test $$? -eq 2
 	@echo '--- invalid JSON (expect exit 1) ---'

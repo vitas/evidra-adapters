@@ -11,7 +11,7 @@ import (
 
 	tfjson "github.com/hashicorp/terraform-json"
 
-	"github.com/evidra/adapters/terraform"
+	"github.com/vitas/evidra-adapters/terraform"
 )
 
 func loadFixture(t *testing.T, name string) []byte {

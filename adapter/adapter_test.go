@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/evidra/adapters/adapter"
+	"github.com/vitas/evidra-adapters/adapter"
 )
 
 // stubAdapter is a minimal implementation to verify the interface compiles.
