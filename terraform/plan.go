@@ -168,6 +168,39 @@ func (a *PlanAdapter) Convert(
 		replaceAddresses = replaceAddresses[:maxChanges]
 	}
 
+	// --- Warnings ---
+	var warnings []string
+
+	if len(plan.ResourceChanges) == 0 {
+		warnings = append(warnings, "plan contains no resource changes")
+	}
+	if plan.TerraformVersion == "" {
+		warnings = append(warnings, "terraform_version missing from plan JSON")
+	}
+	if rcTruncated {
+		warnings = append(warnings,
+			fmt.Sprintf("resource_changes truncated: showing %d of %d",
+				len(changes), rcTotal))
+	}
+	if deleteAddrTruncated {
+		warnings = append(warnings,
+			fmt.Sprintf("delete_addresses truncated: showing %d of %d",
+				len(deleteAddresses), deleteAddrTotal))
+	}
+	if replaceAddrTruncated {
+		warnings = append(warnings,
+			fmt.Sprintf("replace_addresses truncated: showing %d of %d",
+				len(replaceAddresses), replaceAddrTotal))
+	}
+	if len(plan.ResourceChanges) > 500 {
+		warnings = append(warnings,
+			fmt.Sprintf("large plan with %d resources; consider EVIDRA_FILTER_RESOURCE_TYPES",
+				len(plan.ResourceChanges)))
+	}
+	if warnings == nil {
+		warnings = []string{}
+	}
+
 	// --- Compose result ---
 	isDestroyPlan := deletes > 0 && creates == 0 && updates == 0 && replaces == 0
 
@@ -218,7 +251,7 @@ func (a *PlanAdapter) Convert(
 			"resource_count":        len(plan.ResourceChanges),
 			"timestamp":             Now().UTC().Format(time.RFC3339),
 			"artifact_sha256":       sha256Hex(raw),
-			"warnings":              []string{},
+			"warnings":              warnings,
 		},
 	}, nil
 }

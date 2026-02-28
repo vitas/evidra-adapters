@@ -126,10 +126,24 @@ in CI-only mode with v1 adapter.
 Will extract security group rules, IAM statements, and S3 config
 from `resource_changes[].change.after` for supported AWS resource types.
 
-**Important:** In ops profile, `terraform.apply` with metadata-only
-payload is denied by design (`ops.terraform_metadata_only`). This
-prevents false sense of coverage. Switch to baseline profile for
-kill-switch-only CI, or use MCP mode / adapter v2 for full ops coverage.
+**CI behavior in ops profile:**
+
+In ops profile, `terraform.apply` with v1 adapter output (metadata-only)
+is **denied by design**. The rule `ops.terraform_metadata_only` fires
+because ops-layer rules need resource-specific fields that v1 adapter
+does not extract.
+
+Options:
+1. **Baseline profile** — kill-switch only CI (counts, types, truncation)
+2. **MCP mode** — AI agent extracts resource config into payload
+3. **Adapter v2** — deep extraction (planned)
+
+Example with baseline profile:
+```bash
+terraform show -json tfplan \
+  | evidra-adapter-terraform \
+  | EVIDRA_ENVIRONMENT=ci-baseline evidra validate --tool terraform --op apply
+```
 
 ## Exit codes
 
@@ -140,6 +154,65 @@ kill-switch-only CI, or use MCP mode / adapter v2 for full ops coverage.
 | `2` | Usage error — empty stdin, unknown flag |
 
 Use `--json-errors` to get a machine-readable JSON error envelope on stderr instead of plain text.
+
+## Example output (after evidra validate)
+
+```json
+{
+    "pass": true,
+    "risk_level": "low",
+    "rule_ids": [],
+    "reasons": [],
+    "action_results": [
+        {
+            "index": 0,
+            "kind": "terraform.apply",
+            "pass": true,
+            "risk_level": "low",
+            "rule_ids": [],
+            "reasons": [],
+            "hints": []
+        }
+    ]
+}
+```
+
+When denied (e.g. metadata-only in ops profile):
+
+```json
+{
+    "pass": false,
+    "risk_level": "high",
+    "rule_ids": ["ops.terraform_metadata_only"],
+    "action_results": [
+        {
+            "index": 0,
+            "kind": "terraform.apply",
+            "pass": false,
+            "rule_ids": ["ops.terraform_metadata_only"],
+            "reasons": ["terraform.apply payload contains only plan metadata..."],
+            "hints": [
+                "Use MCP mode, adapter v2, or baseline profile.",
+                "{\"payload\":{\"resource_types\":[\"...\"]}}"
+            ]
+        }
+    ]
+}
+```
+
+Note: `rule_ids` and `reasons` at top level are summary (deduped union).
+Per-action details are in `action_results[]`.
+
+## One plan, one run
+
+The adapter processes one terraform plan per invocation.
+For multiple plans, run the adapter separately for each:
+
+```bash
+for plan in plan1.json plan2.json; do
+    cat "$plan" | evidra-adapter-terraform | evidra validate --tool terraform --op apply
+done
+```
 
 ## CI Example
 

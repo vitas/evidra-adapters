@@ -629,6 +629,64 @@ func TestPlanAdapter_InvalidPlan_BadFormatVersion(t *testing.T) {
 	}
 }
 
+func TestPlanAdapter_Warnings_EmptyPlan(t *testing.T) {
+	t.Parallel()
+
+	raw := loadFixture(t, "empty_plan.json")
+	result, err := (&terraform.PlanAdapter{}).Convert(context.Background(), raw, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	warnings := result.Metadata["warnings"].([]string)
+	found := false
+	for _, w := range warnings {
+		if w == "plan contains no resource changes" {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected 'plan contains no resource changes' warning, got %v", warnings)
+	}
+}
+
+func TestPlanAdapter_Warnings_Normal(t *testing.T) {
+	t.Parallel()
+
+	raw := loadFixture(t, "simple_create.json")
+	result, err := (&terraform.PlanAdapter{}).Convert(context.Background(), raw, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	warnings := result.Metadata["warnings"].([]string)
+	if len(warnings) != 0 {
+		t.Errorf("expected no warnings for normal plan, got %v", warnings)
+	}
+}
+
+func TestPlanAdapter_Warnings_Truncation(t *testing.T) {
+	t.Parallel()
+
+	raw := largePlanBytes(t, 500)
+	config := map[string]string{"max_resource_changes": "10"}
+	result, err := (&terraform.PlanAdapter{}).Convert(context.Background(), raw, config)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	warnings := result.Metadata["warnings"].([]string)
+	found := false
+	for _, w := range warnings {
+		if containsStr(w, "truncated") {
+			found = true
+		}
+	}
+	if !found {
+		t.Errorf("expected truncation warning, got %v", warnings)
+	}
+}
+
 // --- helpers ---
 
 func assertInt(t *testing.T, field string, want int, got any) {
